@@ -29,7 +29,7 @@ const menu = async () => {
                     addRole();
                     break;
                 case 'Add Employee':
-                    console.log("Add Employee");
+                    addEmployee();
                     break;
                 case 'View Departments':
                     viewDepartments();
@@ -38,7 +38,7 @@ const menu = async () => {
                     viewRoles();
                     break;
                 case 'View Employees':
-                    console.log("View Employees");
+                    viewEmployees();
                     break;
                 case 'Update Employee Role':
                     console.log("Update Employee Role");
@@ -86,7 +86,7 @@ const addRole = async () => {
             name: 'salary',
             type: 'input',
             message: 'What is the salary of the new role?',
-            validate: inputVal,
+            validate: numVal,
         },
         {
             name: 'department',
@@ -108,7 +108,63 @@ const addRole = async () => {
     menu();
 }
 
-
+const addEmployee = async () => {
+    const role = await connection.query('SELECT * FROM role');
+    let roleArr = role.map((empRole) => {
+        return {
+            name: empRole.title,
+            value: empRole.id,
+        };
+    });
+    const manager = await connection.query('SELECT * FROM employee');
+    let managerArr = manager.map((empManager) => {
+        return {
+            name: `${empManager.first_name} ${empManager.last_name}`,
+            value: empManager.id,
+        };
+    });
+    if (managerArr.length === 0) {
+        managerArr = [{ name: "None", value: null }];
+    }
+    let answer = await inquirer.prompt([
+        {
+            name: 'fName',
+            type: 'input',
+            message: 'What is the first name of the new employee?',
+            validate: inputVal,
+        },
+        {
+            name: 'lName',
+            type: 'input',
+            message: 'What is the last name of the new employee?',
+            validate: inputVal,
+        },
+        {
+            name: 'roleID',
+            type: 'list',
+            choices: roleArr,
+            message: 'What is the role of the new employee?',
+        },
+        {
+            name: 'managerID',
+            type: 'list',
+            choices: managerArr,
+            message: 'Who is the new employee\'s manager??',
+        }
+    ]);
+    let result = await connection.query('INSERT INTO employee SET?', {
+        first_name: answer.fName,
+        last_name: answer.lName,
+        role_id: answer.role_id,
+        manager_id: answer.manager_id,
+    });
+    console.table(
+        '-----------------------------------------------------------------------------------',
+        `           Success! ${answer.fName} ${answer.lName} has been added to your database           `,
+        '-----------------------------------------------------------------------------------',
+    );
+    menu();
+}
 
 const viewDepartments = async () => {
     let showTable = await connection.query('SELECT * FROM department ORDER BY id');
@@ -128,6 +184,19 @@ const viewRoles = async () => {
     console.table(
         '=========================================',
         '                ALL ROLES                ',
+        '=========================================',
+        showTable,
+        '=========================================',
+    );
+    menu();
+}
+
+const viewEmployees = async () => {
+    let showTable = await connection.query(
+        'SELECT employee.id, employee.first_name, employee.last_name FROM employee');
+    console.table(
+        '=========================================',
+        '              ALL EMPLOYEES              ',
         '=========================================',
         showTable,
         '=========================================',
