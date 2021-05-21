@@ -2,6 +2,7 @@ const mysql = require('mysql');
 const inquirer = require('inquirer');
 const logo = require('asciiart-logo');
 const connection = require('./config/connection');
+const { menu } = require('./utils/functions');
 
 connection.connect((err) => {
     if (err) throw err;
@@ -26,4 +27,5 @@ initScreen = () => {
             .center('Simple management of your Employees')
             .render()
     );
+    menu();
 }
