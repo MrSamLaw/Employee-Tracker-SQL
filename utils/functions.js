@@ -1,8 +1,11 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
+const cTable = require('console.table');
+const connection = require('../config/connection');
+const { inputVal } = require('./validate');
 
-const menu = () => {
-    return inquirer.prompt({
+const menu = async () => {
+    return await inquirer.prompt({
         name: 'action',
         type: 'rawlist',
         message: 'What would you like to do?',
@@ -20,7 +23,7 @@ const menu = () => {
         .then((answer) => {
             switch (answer.action) {
                 case 'Add Department':
-                    console.log("Add Department");
+                    addDepartment();
                     break;
                 case 'Add Role':
                     console.log("Add Role");
@@ -29,7 +32,7 @@ const menu = () => {
                     console.log("Add Employee");
                     break;
                 case 'View Departments':
-                    console.log("View Department");
+                    viewDepartments();
                     break;
                 case 'View Roles':
                     console.log("View Roles");
@@ -41,9 +44,47 @@ const menu = () => {
                     console.log("Update Employee Role");
                     break;
                 case 'Exit':
+                    exitProgram();
                     break;
             }
         });
 };
 
+
+const addDepartment = async () => {
+    let answer = await inquirer.prompt({
+        name: 'department',
+        type: 'input',
+        message: 'What is the name of the new department?',
+        validate: inputVal,
+    });
+    let result = await connection.query('INSERT INTO department SET?', { name: answer.department });
+    console.table(
+        '-----------------------------------------------------------------------------------',
+        `           Success! ${answer.department} has been added to your database           `,
+        '-----------------------------------------------------------------------------------',
+    );
+    menu();
+}
+
+const viewDepartments = async () => {
+    let showTable = await connection.query('SELECT * FROM department ORDER BY id');
+    console.table(
+        '=========================================',
+        '             ALL DEPARTMENTS             ',
+        '=========================================',
+        showTable,
+        '=========================================',
+    );
+    menu();
+}
+
+const exitProgram = () => {
+    console.table(
+        '========================================',
+        '  Thank you for using Employee Manager  ',
+        '========================================',
+    );
+    connection.end();
+}
 module.exports = { menu };

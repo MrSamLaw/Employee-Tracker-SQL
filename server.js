@@ -1,11 +1,17 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
+const util = require('util');
 const logo = require('asciiart-logo');
 const connection = require('./config/connection');
 const { menu } = require('./utils/functions');
 
+connection.query = util.promisify(connection.query);
+
 connection.connect((err) => {
-    if (err) throw err;
+    if (err) {
+        console.log(`Error connecting ${err.stack}`);
+        return;
+    }
     initScreen();
 });
 
