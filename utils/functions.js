@@ -26,7 +26,7 @@ const menu = async () => {
                     addDepartment();
                     break;
                 case 'Add Role':
-                    console.log("Add Role");
+                    addRole();
                     break;
                 case 'Add Employee':
                     console.log("Add Employee");
@@ -35,7 +35,7 @@ const menu = async () => {
                     viewDepartments();
                     break;
                 case 'View Roles':
-                    console.log("View Roles");
+                    viewRoles();
                     break;
                 case 'View Employees':
                     console.log("View Employees");
@@ -67,11 +67,67 @@ const addDepartment = async () => {
     menu();
 }
 
+const addRole = async () => {
+    const dept = await connection.query('SELECT * FROM department');
+    const choicesArr = dept.map((deptID) => {
+        return {
+            name: deptID.name,
+            value: deptID.id,
+        };
+    });
+    let answer = await inquirer.prompt([
+        {
+            name: 'title',
+            type: 'input',
+            message: 'What is the title of the new role?',
+            validate: inputVal,
+        },
+        {
+            name: 'salary',
+            type: 'input',
+            message: 'What is the salary of the new role?',
+            validate: inputVal,
+        },
+        {
+            name: 'department',
+            type: 'list',
+            choices: choicesArr,
+            message: 'Which department is the new role in?',
+        }
+    ]);
+    let result = await connection.query('INSERT INTO role SET?', {
+        title: answer.title,
+        salary: answer.salary,
+        department_id: answer.department,
+    });
+    console.table(
+        '-----------------------------------------------------------------------------------',
+        `           Success! ${answer.title} has been added to your database           `,
+        '-----------------------------------------------------------------------------------',
+    );
+    menu();
+}
+
+
+
 const viewDepartments = async () => {
     let showTable = await connection.query('SELECT * FROM department ORDER BY id');
     console.table(
         '=========================================',
         '             ALL DEPARTMENTS             ',
+        '=========================================',
+        showTable,
+        '=========================================',
+    );
+    menu();
+}
+
+const viewRoles = async () => {
+    let showTable = await connection.query(
+        'SELECT role.id, title, salary, name AS department FROM role INNER JOIN department ON role.department_id = department.id');
+    console.table(
+        '=========================================',
+        '                ALL ROLES                ',
         '=========================================',
         showTable,
         '=========================================',
