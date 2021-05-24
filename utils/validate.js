@@ -3,7 +3,7 @@ const inputVal = (input) => {
 }
 
 const numVal = (input) => {
-    return (isNAN(input) === false) ? true : 'Please enter a numerical id.';
+    return (isNaN(input) === false) ? true : 'Please enter a numerical id.';
 }
 
 module.exports = { inputVal, numVal };

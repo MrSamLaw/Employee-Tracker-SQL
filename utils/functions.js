@@ -2,7 +2,7 @@ const mysql = require('mysql');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const connection = require('../config/connection');
-const { inputVal } = require('./validate');
+const { inputVal, numVal } = require('./validate');
 
 const menu = async () => {
     return await inquirer.prompt({
@@ -155,8 +155,8 @@ const addEmployee = async () => {
     let result = await connection.query('INSERT INTO employee SET?', {
         first_name: answer.fName,
         last_name: answer.lName,
-        role_id: answer.role_id,
-        manager_id: answer.manager_id,
+        role_id: answer.roleID,
+        manager_id: answer.managerID,
     });
     console.table(
         '-----------------------------------------------------------------------------------',
