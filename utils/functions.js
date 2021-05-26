@@ -8,7 +8,7 @@ const menu = async () => {
     return await inquirer.prompt({
         name: 'action',
         type: 'rawlist',
-        pageSize: '10',
+        pageSize: '15',
         message: 'What would you like to do?',
         choices: [
             'Add Department',
@@ -17,7 +17,9 @@ const menu = async () => {
             'View Departments',
             'View Roles',
             'View Employees',
+            'View Employees by Manager',
             'Update Employee Role',
+            'Update Employee Manager',
             'Exit',
         ],
     })
@@ -41,8 +43,14 @@ const menu = async () => {
                 case 'View Employees':
                     viewEmployees();
                     break;
+                case 'View Employees by Manager':
+                    viewEmployeesByManager();
+                    break;
                 case 'Update Employee Role':
                     updateEmployeeRole();
+                    break;
+                case 'Update Employee Manager':
+                    updateEmployeeManager();
                     break;
                 case 'Exit':
                     exitProgram();
@@ -205,6 +213,21 @@ const viewEmployees = async () => {
     menu();
 }
 
+const viewEmployeesByManager = async () => {
+    let showTable = await connection.query(
+        'SELECT DISTINCT CONCAT( e1.first_name, " ", e1.last_name ) AS "Employee Name", e1.manager_id AS "Manager ID", title AS Role, name AS Department, salary AS Salary, CONCAT( e2.first_name, " ", e2.last_name ) AS Manager FROM employee e1 INNER JOIN role ON role.id = e1.role_id INNER JOIN department ON department.id = role.department_id LEFT JOIN employee e2 ON e2.id = e1.manager_id WHERE e1.manager_id IS NOT NULL');
+    console.table(
+        '', '',
+        '==============================================================================',
+        '                           ALL EMPLOYEES BY MANAGER                           ',
+        '==============================================================================',
+        showTable,
+        '==============================================================================',
+        '', '',
+    );
+    menu();
+}
+
 const updateEmployeeRole = async () => {
     const emp = await connection.query('SELECT * FROM employee');
     var empArr = emp.map((empName) => {
@@ -234,45 +257,53 @@ const updateEmployeeRole = async () => {
         choices: roleArr,
     });
 
-    // let managerConfirm = await inquirer.prompt({
-    //     name: 'managerConfirm',
-    //     type: 'confirm',
-    //     message: 'Would you like to update manager?',
-    // });
-    // let managerAnswer = "";
-    // if (managerConfirm) {
-    //     const managerInfo = await connection.query('SELECT * FROM employee');
-    //     let managerArr = managerInfo.map((empManager) => {
-    //         return {
-    //             name: `${empManager.first_name} ${empManager.last_name}`,
-    //             value: empManager.id,
-    //         };
-    //     });
-    //     // Employee can't be their own manager -> splice array with empID?
-    //         const currentManager = await connection.query('SELECT * FROM employee WHERE?',[
-    // employee.id ==
-    //         ])
-    //         managerAnswer = await inquirer.prompt({
-    //             name: 'managerID',
-    //             type: 'list',
-    //             message: 'Choose new manager',
-    //             choices: managerArr,
-    //         });
-    //     } else {
-    //         managerAnswer = { value: empManager.id }
-    //     }
-    // let managerResult = await connection.query('UPDATE employee SET?,? WHERE ?'[
-    //     { id: empAnswer.employeeID },
-    //     { role_id: roleAnswer.roleID },
-    //     { manager_id: managerAnswer.managerID }
-    // ]);
     let result = await connection.query('UPDATE employee SET ? WHERE ?',
         [{ role_id: roleAnswer.roleID }, { id: empAnswer.employeeID }]
     );
+    console.log(empAnswer);
     console.table(
-        '-----------------------------------------------------------------------------------',
-        `   Success! ${empAnswer.fName} ${empAnswer.lName} now has the role of ${roleAnswer.title}           `,
-        '-----------------------------------------------------------------------------------',
+        '----------------------------------------------------------------------------------',
+        `                          Success! Employee Role updated                          `,
+        '----------------------------------------------------------------------------------',
+    );
+    menu();
+}
+
+const updateEmployeeManager = async () => {
+    const emp = await connection.query('SELECT * FROM employee');
+    var empArr = emp.map((empName) => {
+        return {
+            name: `${empName.first_name} ${empName.last_name}`,
+            value: empName.id,
+        };
+    });
+    let empAnswer = await inquirer.prompt({
+        name: 'employeeID',
+        type: 'list',
+        message: 'Which employee would you like to update?',
+        choices: empArr,
+    });
+
+    const managerInfo = await connection.query('SELECT * FROM employee');
+    let managerArr = managerInfo.map((empManager) => {
+        return {
+            name: `${empManager.first_name} ${empManager.last_name}`,
+            value: empManager.id,
+        };
+    });
+    let managerAnswer = await inquirer.prompt({
+        name: 'managerID',
+        type: 'list',
+        message: 'Choose new manager',
+        choices: managerArr,
+    });
+    let managerResult = await connection.query('UPDATE employee SET ? WHERE ?',
+        [{ manager_id: managerAnswer.managerID }, { id: empAnswer.employeeID }]
+    );
+    console.table(
+        '---------------------------------------------------------------------------------',
+        `                        Success! Employee Manager updated                        `,
+        '---------------------------------------------------------------------------------',
     );
     menu();
 }
