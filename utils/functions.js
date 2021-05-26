@@ -41,7 +41,7 @@ const menu = async () => {
                     viewEmployees();
                     break;
                 case 'Update Employee Role':
-                    console.log("Update Employee Role");
+                    updateEmployeeRole();
                     break;
                 case 'Exit':
                     exitProgram();
@@ -167,7 +167,7 @@ const addEmployee = async () => {
 }
 
 const viewDepartments = async () => {
-    let showTable = await connection.query('SELECT * FROM department ORDER BY id');
+    let showTable = await connection.query('SELECT name AS Departments FROM department ORDER BY id');
     console.table(
         '=========================================',
         '             ALL DEPARTMENTS             ',
@@ -180,7 +180,7 @@ const viewDepartments = async () => {
 
 const viewRoles = async () => {
     let showTable = await connection.query(
-        'SELECT role.id, title, salary, name AS department FROM role INNER JOIN department ON role.department_id = department.id');
+        'SELECT title AS Role, salary AS Salary, name AS Department FROM role INNER JOIN department ON role.department_id = department.id');
     console.table(
         '=========================================',
         '                ALL ROLES                ',
@@ -193,7 +193,7 @@ const viewRoles = async () => {
 
 const viewEmployees = async () => {
     let showTable = await connection.query(
-        'SELECT employee.id, employee.first_name, employee.last_name FROM employee');
+        'SELECT CONCAT( e1.first_name, " ", e1.last_name ) AS "Employee Name", title AS Role, name AS Department, salary AS Salary, CONCAT( e2.first_name, " ", e2.last_name ) AS Manager FROM employee e1 INNER JOIN role ON role.id = e1.role_id INNER JOIN department ON department.id = role.department_id LEFT JOIN employee e2 ON e2.id = e1.manager_id');
     console.table(
         '=========================================',
         '              ALL EMPLOYEES              ',
@@ -202,6 +202,74 @@ const viewEmployees = async () => {
         '=========================================',
     );
     menu();
+}
+
+const updateEmployeeRole = async () => {
+    const emp = await connection.query('SELECT * FROM employee');
+    var empArr = emp.map((empName) => {
+        return {
+            name: `${empName.first_name} ${empName.last_name}`,
+            value: empName.id,
+        };
+    });
+    let empAnswer = await inquirer.prompt({
+        name: 'employeeID',
+        type: 'list',
+        message: 'Which employee would you like to update?',
+        choices: empArr,
+    });
+
+    const role = await connection.query('SELECT * FROM role');
+    var roleArr = role.map((empRole) => {
+        return {
+            name: empRole.title,
+            value: empRole.id,
+        };
+    });
+    let roleAnswer = await inquirer.prompt({
+        name: 'roleID',
+        type: 'list',
+        message: 'Choose the new role',
+        choices: roleArr,
+    });
+
+    // let managerConfirm = await inquirer.prompt({
+    //     name: 'managerConfirm',
+    //     type: 'confirm',
+    //     message: 'Would you like to update manager?',
+    // });
+    // let managerAnswer = "";
+    // if (managerConfirm) {
+    //     const managerInfo = await connection.query('SELECT * FROM employee');
+    //     let managerArr = managerInfo.map((empManager) => {
+    //         return {
+    //             name: `${empManager.first_name} ${empManager.last_name}`,
+    //             value: empManager.id,
+    //         };
+    //     });
+    //     // Employee can't be their own manager -> splice array with empID?
+    //         const currentManager = await connection.query('SELECT * FROM employee WHERE?',[
+    // employee.id ==
+    //         ])
+    //         managerAnswer = await inquirer.prompt({
+    //             name: 'managerID',
+    //             type: 'list',
+    //             message: 'Choose new manager',
+    //             choices: managerArr,
+    //         });
+    //     } else {
+    //         managerAnswer = { value: empManager.id }
+    //     }
+    // let managerResult = await connection.query('UPDATE employee SET?,? WHERE ?'[
+    //     { id: empAnswer.employeeID },
+    //     { role_id: roleAnswer.roleID },
+    //     { manager_id: managerAnswer.managerID }
+    // ]);
+    console.log(roleAnswer.roleID);
+    console.log(empAnswer.employeeID);
+    let result = await connection.query('UPDATE employee SET role_id = ?, WHERE id = ?',
+        [roleAnswer.roleID, empAnswer.employeeID]
+    );
 }
 
 const exitProgram = () => {
