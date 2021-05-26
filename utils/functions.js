@@ -267,8 +267,11 @@ const updateEmployeeRole = async () => {
     // ]);
     console.log(roleAnswer.roleID);
     console.log(empAnswer.employeeID);
-    let result = await connection.query('UPDATE employee SET role_id = ?, WHERE id = ?',
-        [roleAnswer.roleID, empAnswer.employeeID]
+    let result = await connection.query('UPDATE employee SET ?, WHERE ?',
+        [{ role_id: roleAnswer.roleID }, { id: empAnswer.employeeID }],
+        (error) => {
+            if (error) console.log(error);
+        }
     );
 }
 
