@@ -8,6 +8,7 @@ const menu = async () => {
     return await inquirer.prompt({
         name: 'action',
         type: 'rawlist',
+        pageSize: '10',
         message: 'What would you like to do?',
         choices: [
             'Add Department',
@@ -265,14 +266,15 @@ const updateEmployeeRole = async () => {
     //     { role_id: roleAnswer.roleID },
     //     { manager_id: managerAnswer.managerID }
     // ]);
-    console.log(roleAnswer.roleID);
-    console.log(empAnswer.employeeID);
-    let result = await connection.query('UPDATE employee SET ?, WHERE ?',
-        [{ role_id: roleAnswer.roleID }, { id: empAnswer.employeeID }],
-        (error) => {
-            if (error) console.log(error);
-        }
+    let result = await connection.query('UPDATE employee SET ? WHERE ?',
+        [{ role_id: roleAnswer.roleID }, { id: empAnswer.employeeID }]
     );
+    console.table(
+        '-----------------------------------------------------------------------------------',
+        `   Success! ${empAnswer.fName} ${empAnswer.lName} now has the role of ${roleAnswer.title}           `,
+        '-----------------------------------------------------------------------------------',
+    );
+    menu();
 }
 
 const exitProgram = () => {
